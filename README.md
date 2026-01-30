@@ -47,6 +47,18 @@ All outputs are available in the `outputs/` directory.
 
 ---
 
+
+## Maps (PDF)
+- Health Accessibility Index map: `outputs/maps/health_access_map.pdf`
+- Sensitivity analysis map: `outputs/maps/sensitivity_map.pdf`
+- Urban–Rural comparison map: `outputs/maps/urban_rural_map.pdf`
+
+## Quick preview
+![Health access map](outputs/maps/health_access_map.png)
+![Sensitivity map](outputs/maps/sensitivity_map.png)
+![Urban–Rural map](outputs/maps/urban_rural_map.png)
+
+
 ## 🛠️ Tools & Technologies
 - **Python** (pandas, geopandas)
 - **QGIS** (cartography & spatial styling)
