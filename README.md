@@ -54,9 +54,9 @@ All outputs are available in the `outputs/` directory.
 - Urban–Rural comparison map: `outputs/maps/urban_rural_map.pdf`
 
 ## Quick preview
-![Health access map](outputs/maps/health_access_map.png)
-![Sensitivity map](outputs/maps/sensitivity_map.png)
-![Urban–Rural map](outputs/maps/urban_rural_map.png)
+![Health access map](outputs/maps/health_access_map.jpeg)
+![Sensitivity map](outputs/maps/sensitivity_map.jpeg)
+![Urban–Rural map](outputs/maps/urban_rural_map.jpeg)
 
 
 ## 🛠️ Tools & Technologies
