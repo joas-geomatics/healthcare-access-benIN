@@ -1,50 +1,109 @@
-# Healthcare Accessibility in Benin 🇧🇯
+Healthcare Accessibility in Benin 🇧🇯
 
-**Commune-level spatial analysis of healthcare accessibility using GIS and Python**
+Commune-level spatial analysis of healthcare accessibility using GIS and Python
 
-This project analyzes healthcare accessibility across the 77 communes of Benin using a **composite spatial index** that integrates distance to health facilities, demographic pressure, and facility capacity.  
-It also explores **urban–rural disparities** and tests the **robustness of results through sensitivity analysis**.
+This project analyzes healthcare accessibility across the 77 communes of Benin using a composite spatial index integrating:
 
----
+Distance to health facilities
 
-## 🎯 Objectives
-- Measure healthcare accessibility at the **commune level**
-- Identify spatial inequalities across Benin
-- Test whether **urban status guarantees better access**
-- Assess the **sensitivity** of results to modeling assumptions
+Demographic pressure
 
----
+Facility capacity (weighted by type)
 
-## 🧠 Key Findings
-- **Urban status does not guarantee good healthcare access**
-- Major urban communes (**Cotonou, Abomey-Calavi, Porto-Novo, Parakou**) are classified between **medium and very poor access**
-- Some rural communes show moderate accessibility due to lower demographic pressure
-- Accessibility patterns remain generally stable, but **specific communes are sensitive to weighting choices**
+It also explores urban–rural disparities and tests the robustness of results through sensitivity analysis.
 
----
+🚀 Update – Fully Reproducible GeoPandas Workflow (v2)
 
-## 🗺️ Method Overview
-- Construction of a **composite accessibility index** combining:
-  - Average distance to health facilities
-  - Population pressure
-  - Facility capacity (weighted by facility type)
-- Indicators normalized using **min–max scaling**
-- Aggregation at the **commune level**
-- Classification into four accessibility levels using a **quantile-based approach**
-- Sensitivity analysis performed by testing multiple weighting scenarios
-- Urban–rural comparison based on administrative status
+The analysis has been upgraded to a fully spatially reproducible pipeline using GeoPandas.
 
-📄 Full methodology available in [`methodology.md`](methodology.md)
+Instead of relying on intermediate CSV files, the index is now computed directly from:
 
----
+Administrative boundaries (communes)
 
-## 📊 Outputs
-- Commune-level **Healthcare Accessibility Map**
-- **Sensitivity Analysis Map**
-- Urban vs Rural accessibility comparison tables
+Localities (settlements)
 
-All outputs are available in the `outputs/` directory.
+Health facility point layers
 
+Using:
+
+Spatial joins (sjoin)
+
+Nearest distance computation (sjoin_nearest)
+
+Automated aggregation at commune level
+
+This improves:
+
+Reproducibility
+
+Automation
+
+Methodological transparency
+
+Analytical robustness
+
+🎯 Objectives
+
+Measure healthcare accessibility at the commune level
+
+Identify spatial inequalities across Benin
+
+Test whether urban status guarantees better access
+
+Assess the sensitivity of results to modeling assumptions
+
+🧠 Key Findings
+
+Urban status does not guarantee good healthcare access
+
+Major urban communes (Cotonou, Abomey-Calavi, Porto-Novo, Parakou) are classified between medium and very poor access
+
+Some rural communes show moderate accessibility due to lower demographic pressure
+
+Accessibility patterns remain generally stable, but specific communes are sensitive to weighting choices
+
+🗺️ Method Overview
+Indicators
+
+Mean distance from localities to nearest health facility
+
+Population pressure (population / number of facilities)
+
+Facility capacity proxy (weighted by facility type)
+
+Processing Steps
+
+Reprojection to metric CRS
+
+Nearest distance computation (GeoPandas sjoin_nearest)
+
+Spatial aggregation at commune level
+
+Indicator normalization (min–max scaling)
+
+Composite index construction
+
+Quantile-based classification (4 classes)
+
+Sensitivity scenario testing
+
+📄 Full methodology available in methodology.md
+
+📊 Outputs
+
+Commune-level Healthcare Accessibility Index (Scenario A)
+
+Sensitivity analysis scenarios (A–D)
+
+Urban vs Rural statistical comparison
+
+Stability classification
+
+All outputs are available in:
+
+/data/processed/
+/outputs/tables/
+/outputs/maps/
 ---
 
 
@@ -60,10 +119,10 @@ All outputs are available in the `outputs/` directory.
 
 
 ## 🛠️ Tools & Technologies
-- **Python** (pandas, geopandas)
-- **QGIS** (cartography & spatial styling)
-- **Spatial analysis & GIS modeling**
-- Reproducible project structure (GitHub-ready)
+Python (pandas, geopandas)
+GeoPandas spatial joins & nearest analysis
+QGIS (cartography & layout design)
+Reproducible spatial workflow
 
 
 ---
@@ -74,6 +133,23 @@ All outputs are available in the `outputs/` directory.
 - Administrative boundaries: **IGN Benin**
 
 ---
+
+
+📁 Project Structure
+/scripts_v1/                 # Initial workflow (CSV-based)
+/scripts_v2_geopandas/       # Fully spatial GeoPandas workflow
+    utils_indicators.py
+    01_compute_index_geopandas.py
+    02_sensitivity_analysis_geopandas.py
+    03_urban_rural_analysis_geopandas.py
+
+/data/raw/
+/data/processed/
+/outputs/maps/
+/outputs/tables/
+
+
+-------
 
 ## 👤 Author
 **N’tcha Joas N’dah**  
