@@ -101,9 +101,9 @@ Stability classification
 
 All outputs are available in:
 
-data/processed/
-outputs/tables/
-outputs/maps/
+-/data/processed/
+-/outputs/tables/
+-/outputs/maps/
 ---
 
 
