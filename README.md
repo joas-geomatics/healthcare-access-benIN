@@ -1,4 +1,4 @@
-##Healthcare Accessibility in Benin 🇧🇯
+## Healthcare Accessibility in Benin 🇧🇯
 
 Commune-level spatial analysis of healthcare accessibility using GIS and Python
 
@@ -42,7 +42,7 @@ Methodological transparency
 
 Analytical robustness
 
-##🎯 Objectives
+## 🎯 Objectives
 
 Measure healthcare accessibility at the commune level
 
@@ -52,7 +52,7 @@ Test whether urban status guarantees better access
 
 Assess the sensitivity of results to modeling assumptions
 
-##🧠 Key Findings
+## 🧠 Key Findings
 
 Urban status does not guarantee good healthcare access
 
@@ -62,7 +62,7 @@ Some rural communes show moderate accessibility due to lower demographic pressur
 
 Accessibility patterns remain generally stable, but specific communes are sensitive to weighting choices
 
-##🗺️ Method Overview
+## 🗺️ Method Overview
 Indicators
 
 Mean distance from localities to nearest health facility
@@ -87,9 +87,9 @@ Quantile-based classification (4 classes)
 
 Sensitivity scenario testing
 
-#📄 Full methodology available in methodology.md
+## 📄 Full methodology available in methodology.md
 
-#📊 Outputs
+## 📊 Outputs
 
 Commune-level Healthcare Accessibility Index (Scenario A)
 
@@ -160,4 +160,3 @@ GIS & Python – Spatial Analysis
 
 ---
 
-## 📁 Project Structure
