@@ -3,7 +3,6 @@ import json
 import streamlit as st
 import pydeck as pdk
 
-pdk.settings.mapbox_api_key = st.secrets["MAPBOX_API_KEY"]
 
 st.title("Niveau d'accessibilité aux infrastructures de santé au Bénin")
 
@@ -67,7 +66,7 @@ deck = pdk.Deck(
     layers=[layer],
     initial_view_state=view_state,
     tooltip=tooltip,
-    map_style="mapbox://styles/mapbox/light-v10",
+    map_style=None,
 )
 
 st.pydeck_chart(deck, use_container_width=True)
