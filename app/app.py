@@ -1,64 +1,73 @@
+from pathlib import Path
 import json
-import pandas as pd
-import plotly.express as px
 import streamlit as st
+import pydeck as pdk
 
-st.subheader("Niveau d'accessibilité aux infrastructures de santé au Bénin")
+pdk.settings.mapbox_api_key = st.secrets["MAPBOX_API_KEY"]
 
-with open("app/commune.geojson", "r", encoding="utf-8") as f:
-    gj = json.load(f)
+st.title("Niveau d'accessibilité aux infrastructures de santé au Bénin")
 
-rows = [feat["properties"] for feat in gj["features"]]
-df = pd.DataFrame(rows)
+APP_DIR = Path(__file__).parent
+GEOJSON_PATH = APP_DIR / "commune.geojson"
 
-df = df.rename(columns={
-    "Com_norm": "Commune",
-    "hopital_com_csv_population": "Population",
-    "hopital_com_csv_nb_infra": "Nb_infra",
-    "hopital_com_csv_niv_acces": "Accessibilité",
-    "hopital_com_csv_idx_A_norm": "Indice"
-})
+@st.cache_data
+def load_geojson(path: Path):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
-# Formatage
-df["Population"] = df["Population"].apply(lambda x: f"{int(x):,}".replace(",", " "))
-df["Indice"] = df["Indice"].round(2)
+try:
+    gj = load_geojson(GEOJSON_PATH)
+    st.write("✅ GeoJSON chargé :", len(gj["features"]), "communes")
+except Exception as e:
+    st.error(f"Impossible de charger le GeoJSON : {e}")
+    st.stop()
 
-# --- IMPORTANT : forcer l'ordre des catégories ---
-ordre = ["Tres faible", "Faible", "Moyen", "Bon acces"]
-df["Accessibilité"] = pd.Categorical(df["Accessibilité"], categories=ordre, ordered=True)
-
-# --- IMPORTANT : forcer les couleurs ---
-couleurs = {
-    "Bon acces": "#006400",   # vert foncé
-    "Moyen": "#FFD700",       # jaune
-    "Faible": "#FF8C00",      # orange
-    "Tres faible": "#B22222"  # rouge
+# Couleurs imposées (RGBA)
+COLOR_MAP = {
+    "Bon acces": [0, 100, 0, 180],      # vert foncé
+    "Moyen": [255, 215, 0, 180],        # jaune
+    "Faible": [255, 140, 0, 180],       # orange
+    "Tres faible": [178, 34, 34, 180],  # rouge
 }
 
-fig = px.choropleth_mapbox(
-    df,
-    geojson=gj,
-    locations="Commune",
-    featureidkey="properties.Com_norm",
-    hover_name="Commune",
-    color="Accessibilité",
-    category_orders={"Accessibilité": ordre},
-    color_discrete_map=couleurs,
-    hover_data={
-        "Population": True,
-        "Nb_infra": True,
-        "Accessibilité": True,
-        "Indice": True
-    },
-    mapbox_style="carto-positron",
-    zoom=5.7,
-    center={"lat": 9.3, "lon": 2.3},
-    opacity=0.85
+def feature_color(feat):
+    niv = feat["properties"].get("hopital_com_csv_niv_acces", "Faible")
+    return COLOR_MAP.get(niv, [200, 200, 200, 120])
+
+# Ajouter une couleur calculée à chaque feature
+for feat in gj["features"]:
+    feat["properties"]["__fill_color"] = feature_color(feat)
+
+tooltip = {
+    "html": """
+    <b>{Com_norm}</b><br/>
+    Population : {hopital_com_csv_population}<br/>
+    Nb infrastructures : {hopital_com_csv_nb_infra}<br/>
+    Niveau : {hopital_com_csv_niv_acces}<br/>
+    Indice (0–1) : {hopital_com_csv_idx_A_norm}
+    """,
+    "style": {"backgroundColor": "white", "color": "black"}
+}
+
+layer = pdk.Layer(
+    "GeoJsonLayer",
+    data=gj,
+    opacity=0.8,
+    stroked=True,
+    filled=True,
+    get_fill_color="properties.__fill_color",
+    get_line_color=[120, 120, 120, 200],
+    line_width_min_pixels=0.6,
+    pickable=True,
 )
 
-fig.update_layout(
-    margin={"r":0,"t":0,"l":0,"b":0},
-    legend_title_text="Accessibilité"
+view_state = pdk.ViewState(latitude=9.3, longitude=2.3, zoom=5.6)
+
+deck = pdk.Deck(
+    layers=[layer],
+    initial_view_state=view_state,
+    tooltip=tooltip,
+    map_style="mapbox://styles/mapbox/light-v10",
 )
 
-st.plotly_chart(fig, use_container_width=True)
+st.pydeck_chart(deck, use_container_width=True)
