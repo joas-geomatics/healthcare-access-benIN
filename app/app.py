@@ -2,6 +2,7 @@ from pathlib import Path
 import json
 import streamlit as st
 import pydeck as pdk
+import math
 
 
 st.title("Niveau d'accessibilité aux infrastructures de santé au Bénin")
@@ -14,12 +15,70 @@ def load_geojson(path: Path):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
+
 try:
     gj = load_geojson(GEOJSON_PATH)
     st.write("✅ GeoJSON chargé :", len(gj["features"]), "communes")
 except Exception as e:
     st.error(f"Impossible de charger le GeoJSON : {e}")
     st.stop()
+
+
+
+# # ggggg
+# st.write("Type racine:", gj.get("type"))
+# st.write("Clés racine:", list(gj.keys())[:20])
+
+# # regarder 1 feature
+# f0 = gj["features"][0]
+# st.write("Feature keys:", list(f0.keys()))
+# st.write("Geometry type:", None if f0.get("geometry") is None else f0["geometry"].get("type"))
+# st.write("Geometry preview:", f0.get("geometry"))
+
+
+# def collect_lonlat(geojson, nmax=3000):
+#     lons, lats = [], []
+#     def walk(c):
+#         nonlocal lons, lats
+#         if (
+#             isinstance(c, (list, tuple))
+#             and len(c) >= 2
+#             and all(isinstance(x, (int, float)) for x in c[:2])
+#         ):
+#             lon, lat = c[0], c[1]
+#             lons.append(lon)
+#             lats.append(lat)
+
+#     for feat in geojson.get("features", []):
+#         geom = feat.get("geometry")
+#         if not geom:
+#             continue
+#         walk(geom.get("coordinates"))
+#         if len(lons) >= nmax:
+#             break
+#     return lons, lats
+
+# lons, lats = collect_lonlat(gj)
+
+# if not lons or not lats:
+#     st.error("❌ Aucune coordonnée trouvée dans le GeoJSON.")
+#     st.stop()
+
+# st.write("🔎 Diagnostics coordonnées")
+# st.write("Lon min/max:", min(lons), max(lons))
+# st.write("Lat min/max:", min(lats), max(lats))
+
+# # Test CRS
+# if max(map(abs, lons)) > 180 or max(map(abs, lats)) > 90:
+#     st.error("❌ Ton GeoJSON n'est pas en WGS84 (lon/lat). Il est probablement en UTM (mètres).")
+#     st.info("➡️ Reprojette dans QGIS en EPSG:4326 puis ré-exporte en GeoJSON.")
+#     st.stop()
+# else:
+#     st.success("✅ Coordonnées WGS84 (lon/lat) détectées. La carte devrait s'afficher.")
+
+
+
+
 
 # Couleurs imposées (RGBA)
 COLOR_MAP = {
