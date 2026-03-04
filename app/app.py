@@ -72,7 +72,7 @@ sel = st.sidebar.multiselect("Niveau d’accessibilité", ordre, default=ordre)
 df_map = df[df["Niveau_accessibilite"].isin(sel)].copy()
 
 fig = px.choropleth_map(
-    df,
+    df_map,
     geojson=gj,
     locations="commune_id",
     featureidkey="properties.commune_id",   # champ dans le GeoJSON
