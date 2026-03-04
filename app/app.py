@@ -51,49 +51,51 @@ couleurs = {
 st.subheader("Carte interactive")
 st.sidebar.header("Filtres")
 sel = st.sidebar.multiselect("Niveau d'accessibilité", ordre, default=ordre)
-df_map = df[df["Niv_accessibilite"].isin(sel)].copy()
+df_test = df[df["Niv_accessibilite"].isin(sel)].copy()
 fig = px.choropleth_mapbox(
-    df_map,
+    df_test,
     geojson=gj,
     locations="Commune",
-    featureidkey="properties.Com_norm",   # champ dans le GeoJSON
+    featureidkey="properties.Com_norm",
     color="Niv_accessibilite",
-    category_orders={"Niv_accessibilite": ordre},
-    color_discrete_map=couleurs,
     hover_name="Commune",
     hover_data={
         "Population": True,
         "Nb_infra": True,
-        "Niv_accessibilite": True,
         "Indice": True
     },
-    mapbox_style="carto-positron",  # pas besoin de token
-    center={"lat": 9.3, "lon": 2.3},
-    zoom=5.7,
+    mapbox_style="carto-positron",
+    center={"lat": 9.6, "lon": 2.3},   # centre Bénin
+    zoom=5.5,
     opacity=0.85
 )
 
-fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
-
-
-st.write("Colonnes df:", df_map.columns.tolist() if "df_map" in locals() else df.columns.tolist())
-
-# 1) Vérifie les valeurs de communes côté CSV/properties
-df_test = df_map if "df_map" in locals() else df
-st.write("Exemples Commune df:", df_test["Commune"].dropna().astype(str).head(5).tolist())
-
-# 2) Vérifie les valeurs de communes côté GeoJSON
-geo_communes = [f["properties"].get("Com_norm") for f in gj["features"]]
-st.write("Exemples Commune geojson:", geo_communes[:5])
-
-# 3) Vérifie combien de communes matchent réellement
-df_set = set(df_test["Commune"].dropna().astype(str))
-geo_set = set([c for c in geo_communes if c is not None])
-st.write("Match count:", len(df_set.intersection(geo_set)), "/", len(df_set))
-st.write("Exemple non match (df):", list(df_set - geo_set)[:10])
+fig.update_layout(
+    margin={"r":0,"t":0,"l":0,"b":0},
+    height=700
+)
 
 st.plotly_chart(fig, use_container_width=True)
 
-with st.expander("Voir les données"):
-    st.dataframe(df.sort_values("Indice"), use_container_width=True)
+
+# st.write("Colonnes df:", df_map.columns.tolist() if "df_map" in locals() else df.columns.tolist())
+
+# # 1) Vérifie les valeurs de communes côté CSV/properties
+# df_test = df_map if "df_map" in locals() else df
+# st.write("Exemples Commune df:", df_test["Commune"].dropna().astype(str).head(5).tolist())
+
+# # 2) Vérifie les valeurs de communes côté GeoJSON
+# geo_communes = [f["properties"].get("Com_norm") for f in gj["features"]]
+# st.write("Exemples Commune geojson:", geo_communes[:5])
+
+# # 3) Vérifie combien de communes matchent réellement
+# df_set = set(df_test["Commune"].dropna().astype(str))
+# geo_set = set([c for c in geo_communes if c is not None])
+# st.write("Match count:", len(df_set.intersection(geo_set)), "/", len(df_set))
+# st.write("Exemple non match (df):", list(df_set - geo_set)[:10])
+
+# st.plotly_chart(fig, use_container_width=True)
+
+# with st.expander("Voir les données"):
+#     st.dataframe(df.sort_values("Indice"), use_container_width=True)
 
