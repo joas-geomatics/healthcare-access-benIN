@@ -74,6 +74,24 @@ fig = px.choropleth_mapbox(
 )
 
 fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+
+
+st.write("Colonnes df:", df_map.columns.tolist() if "df_map" in locals() else df.columns.tolist())
+
+# 1) Vérifie les valeurs de communes côté CSV/properties
+df_test = df_map if "df_map" in locals() else df
+st.write("Exemples Commune df:", df_test["Commune"].dropna().astype(str).head(5).tolist())
+
+# 2) Vérifie les valeurs de communes côté GeoJSON
+geo_communes = [f["properties"].get("Com_norm") for f in gj["features"]]
+st.write("Exemples Commune geojson:", geo_communes[:5])
+
+# 3) Vérifie combien de communes matchent réellement
+df_set = set(df_test["Commune"].dropna().astype(str))
+geo_set = set([c for c in geo_communes if c is not None])
+st.write("Match count:", len(df_set.intersection(geo_set)), "/", len(df_set))
+st.write("Exemple non match (df):", list(df_set - geo_set)[:10])
+
 st.plotly_chart(fig, use_container_width=True)
 
 with st.expander("Voir les données"):
