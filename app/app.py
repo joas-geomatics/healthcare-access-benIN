@@ -77,6 +77,9 @@ st.sidebar.header("Filtres")
 sel = st.sidebar.multiselect("Niveau d’accessibilité", ordre, default=ordre)
 df_map = df[df["Niveau_accessibilite"].isin(sel)].copy()
 
+with st.expander("Voir les données"):
+    st.dataframe(df.sort_values("Indice"), width="stretch")
+
 fig = px.choropleth_map(
     df_map,
     geojson=gj,
@@ -104,5 +107,4 @@ fig.update_layout(
 )
 st.plotly_chart(fig, width="stretch")
 
-with st.expander("Voir les données"):
-    st.dataframe(df.sort_values("Indice"), width="stretch")
+
