@@ -1,12 +1,13 @@
 from pathlib import Path
 import json
+import pandas as pd
 import streamlit as st
-import pydeck as pdk
-import math
+import plotly.express as px
 
+st.set_page_config(page_title="Accessibilité santé - Bénin", layout="wide")
+st.title("Accessibilité communale aux infrastructures de santé - Bénin")
 
-st.title("Niveau d'accessibilité aux infrastructures de santé au Bénin")
-
+# --- Chemins robustes (local + cloud) ---
 APP_DIR = Path(__file__).parent
 GEOJSON_PATH = APP_DIR / "commune.geojson"
 
@@ -15,117 +16,66 @@ def load_geojson(path: Path):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
+gj = load_geojson(GEOJSON_PATH)
+st.caption(f"Total : {len(gj.get('features', []))} communes")
 
-try:
-    gj = load_geojson(GEOJSON_PATH)
-    st.write("✅ GeoJSON chargé :", len(gj["features"]), "communes")
-except Exception as e:
-    st.error(f"Impossible de charger le GeoJSON : {e}")
-    st.stop()
+# --- DataFrame depuis les propriétés ---
+rows = [feat["properties"] for feat in gj["features"]]
+df = pd.DataFrame(rows)
 
+# --- Renommage pour affichage propre ---
+df = df.rename(columns={
+    "Com_norm": "Commune",
+    "hopital_com_csv_population": "Population",
+    "hopital_com_csv_nb_infra": "Nb_infra",
+    "hopital_com_csv_niv_acces": "Niv_accessibilite",
+    "hopital_com_csv_idx_A_norm": "Indice"
+})
 
+# --- Nettoyage/formatage ---
+df["Indice"] = pd.to_numeric(df["Indice"], errors="coerce").round(2)
+df["Population"] = pd.to_numeric(df["Population"], errors="coerce")
+df["Nb_infra"] = pd.to_numeric(df["Nb_infra"], errors="coerce")
 
-# # ggggg
-# st.write("Type racine:", gj.get("type"))
-# st.write("Clés racine:", list(gj.keys())[:20])
+# Ordre + couleurs imposées
+ordre = ["Tres faible", "Faible", "Moyen", "Bon acces"]
+df["Niv_accessibilite"] = pd.Categorical(df["Niv_accessibilite"], categories=ordre, ordered=True)
 
-# # regarder 1 feature
-# f0 = gj["features"][0]
-# st.write("Feature keys:", list(f0.keys()))
-# st.write("Geometry type:", None if f0.get("geometry") is None else f0["geometry"].get("type"))
-# st.write("Geometry preview:", f0.get("geometry"))
-
-
-# def collect_lonlat(geojson, nmax=3000):
-#     lons, lats = [], []
-#     def walk(c):
-#         nonlocal lons, lats
-#         if (
-#             isinstance(c, (list, tuple))
-#             and len(c) >= 2
-#             and all(isinstance(x, (int, float)) for x in c[:2])
-#         ):
-#             lon, lat = c[0], c[1]
-#             lons.append(lon)
-#             lats.append(lat)
-
-#     for feat in geojson.get("features", []):
-#         geom = feat.get("geometry")
-#         if not geom:
-#             continue
-#         walk(geom.get("coordinates"))
-#         if len(lons) >= nmax:
-#             break
-#     return lons, lats
-
-# lons, lats = collect_lonlat(gj)
-
-# if not lons or not lats:
-#     st.error("❌ Aucune coordonnée trouvée dans le GeoJSON.")
-#     st.stop()
-
-# st.write("🔎 Diagnostics coordonnées")
-# st.write("Lon min/max:", min(lons), max(lons))
-# st.write("Lat min/max:", min(lats), max(lats))
-
-# # Test CRS
-# if max(map(abs, lons)) > 180 or max(map(abs, lats)) > 90:
-#     st.error("❌ Ton GeoJSON n'est pas en WGS84 (lon/lat). Il est probablement en UTM (mètres).")
-#     st.info("➡️ Reprojette dans QGIS en EPSG:4326 puis ré-exporte en GeoJSON.")
-#     st.stop()
-# else:
-#     st.success("✅ Coordonnées WGS84 (lon/lat) détectées. La carte devrait s'afficher.")
-
-
-
-
-
-# Couleurs imposées (RGBA)
-COLOR_MAP = {
-    "Bon acces": [0, 100, 0, 180],      # vert foncé
-    "Moyen": [255, 215, 0, 180],        # jaune
-    "Faible": [255, 140, 0, 180],       # orange
-    "Tres faible": [178, 34, 34, 180],  # rouge
+couleurs = {
+    "Bon acces": "#006400",    # vert foncé
+    "Moyen": "#FFD700",        # jaune
+    "Faible": "#FF8C00",       # orange
+    "Tres faible": "#B22222"   # rouge
 }
 
-def feature_color(feat):
-    niv = feat["properties"].get("hopital_com_csv_niv_acces", "Faible")
-    return COLOR_MAP.get(niv, [200, 200, 200, 120])
-
-# Ajouter une couleur calculée à chaque feature
-for feat in gj["features"]:
-    feat["properties"]["__fill_color"] = feature_color(feat)
-
-tooltip = {
-    "html": """
-    <b>{Com_norm}</b><br/>
-    Population : {hopital_com_csv_population}<br/>
-    Nb infrastructures : {hopital_com_csv_nb_infra}<br/>
-    Niveau : {hopital_com_csv_niv_acces}<br/>
-    Indice (0–1) : {hopital_com_csv_idx_A_norm}
-    """,
-    "style": {"backgroundColor": "white", "color": "black"}
-}
-
-layer = pdk.Layer(
-    "GeoJsonLayer",
-    data=gj,
-    opacity=0.8,
-    stroked=True,
-    filled=True,
-    get_fill_color="properties.__fill_color",
-    get_line_color=[120, 120, 120, 200],
-    line_width_min_pixels=0.6,
-    pickable=True,
+st.subheader("Carte interactive")
+st.sidebar.header("Filtres")
+sel = st.sidebar.multiselect("Niveau d'accessibilité", ordre, default=ordre)
+df_map = df[df["Niv_accessibilite"].isin(sel)].copy()
+fig = px.choropleth_mapbox(
+    df_map,
+    geojson=gj,
+    locations="Commune",
+    featureidkey="properties.Com_norm",   # champ dans le GeoJSON
+    color="Niv_accessibilite",
+    category_orders={"Niv_accessibilite": ordre},
+    color_discrete_map=couleurs,
+    hover_name="Commune",
+    hover_data={
+        "Population": True,
+        "Nb_infra": True,
+        "Niv_accessibilite": True,
+        "Indice": True
+    },
+    mapbox_style="carto-positron",  # pas besoin de token
+    center={"lat": 9.3, "lon": 2.3},
+    zoom=5.7,
+    opacity=0.85
 )
 
-view_state = pdk.ViewState(latitude=9.3, longitude=2.3, zoom=5.6)
+fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+st.plotly_chart(fig, use_container_width=True)
 
-deck = pdk.Deck(
-    layers=[layer],
-    initial_view_state=view_state,
-    tooltip=tooltip,
-    map_style=None,
-)
+with st.expander("Voir les données"):
+    st.dataframe(df.sort_values("Indice"), use_container_width=True)
 
-st.pydeck_chart(deck, use_container_width=True)
