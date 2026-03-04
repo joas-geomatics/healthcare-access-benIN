@@ -28,12 +28,18 @@ def norm(s: str) -> str:
 @st.cache_data
 def load_geojson(path: Path):
     with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        gj = json.load(f)
+
+    # IMPORTANT: on prépare commune_id ici (dans le cache)
+    for feat in gj.get("features", []):
+        props = feat.setdefault("properties", {})
+        props["commune_id"] = norm(props.get("Com_norm"))
+    return gj
+
 
 gj = load_geojson(GEOJSON_PATH)
 st.caption(f"GeoJSON chargé : {len(gj.get('features', []))} communes")
-for f in gj["features"]:
-    f["properties"]["commune_id"] = norm(f["properties"].get("Com_norm"))
+
 
 # --- DataFrame depuis les propriétés ---
 rows = [feat["properties"] for feat in gj["features"]]
@@ -96,7 +102,7 @@ fig.update_layout(
     margin={"r": 0, "t": 0, "l": 0, "b": 0},
     height=650
 )
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, width="stretch")
 
 with st.expander("Voir les données"):
-    st.dataframe(df.sort_values("Indice"), use_container_width=True)
+    st.dataframe(df.sort_values("Indice"), width="stretch")
