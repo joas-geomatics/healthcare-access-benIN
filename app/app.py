@@ -92,8 +92,11 @@ fig = px.choropleth_map(
     opacity=0.85
 )
 
-fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
-st.plotly_chart(fig, width="stretch")
+fig.update_layout(
+    margin={"r": 0, "t": 0, "l": 0, "b": 0},
+    height=650
+)
+st.plotly_chart(fig, use_container_width=True)
 
 with st.expander("Voir les données"):
     st.dataframe(df.sort_values("Indice"), use_container_width=True)
