@@ -141,6 +141,89 @@
 # st.plotly_chart(fig, width="stretch")
 
 
+# from pathlib import Path
+# import json
+# import streamlit as st
+# import pydeck as pdk
+
+# st.set_page_config(page_title="Test GeoJSON Bénin", layout="wide")
+# st.title("Test carte GeoJSON – Bénin")
+
+# APP_DIR = Path(__file__).parent
+# GEOJSON_PATH = APP_DIR / "communef.geojson"
+
+# with open(GEOJSON_PATH, "r", encoding="utf-8") as f:
+#     gj = json.load(f)
+
+# st.caption(f"GeoJSON chargé : {len(gj.get('features', []))} communes")
+
+# layer = pdk.Layer(
+#     "GeoJsonLayer",
+#     gj,
+#     opacity=0.6,
+#     stroked=True,
+#     filled=True,
+#     extruded=False,
+#     wireframe=False,
+#     get_fill_color=[200, 30, 0, 120],
+#     get_line_color=[0, 0, 0, 180],
+#     line_width_min_pixels=1,
+#     pickable=True,
+# )
+
+# view_state = pdk.ViewState(
+#     latitude=9.3,
+#     longitude=2.3,
+#     zoom=6,
+#     pitch=0
+# )
+
+# deck = pdk.Deck(
+#     layers=[layer],
+#     initial_view_state=view_state,
+#     map_style=None
+# )
+
+# st.pydeck_chart(deck, width="stretch")
+
+
+# Crequestion : comment préparer un GeoJSON pour une carte web (simplification, nettoyage, etc.) ?
+
+# import geopandas as gpd
+
+# gdf = gpd.read_file(r"app\communef.geojson")
+
+# # Reprojection en WGS84 si nécessaire
+# if gdf.crs is None:
+#     gdf = gdf.set_crs(epsg=4326)
+# elif gdf.crs.to_epsg() != 4326:
+#     gdf = gdf.to_crs(epsg=4326)
+
+# # Corriger les géométries invalides
+# gdf = gdf[gdf.geometry.notnull()].copy()
+# gdf = gdf[~gdf.geometry.is_empty].copy()
+# gdf["geometry"] = gdf.buffer(0)
+
+# # Garder seulement les colonnes utiles
+# cols = [
+#     "Com_norm",
+#     "hopital_com_csv_population",
+#     "hopital_com_csv_nb_infra",
+#     "hopital_com_csv_niv_acces",
+#     "hopital_com_csv_idx_A_norm",
+#     "geometry"
+# ]
+# cols = [c for c in cols if c in gdf.columns]
+# gdf = gdf[cols].copy()
+
+# # Simplification légère pour le web
+# gdf["geometry"] = gdf.geometry.simplify(0.001, preserve_topology=True)
+
+# # Export
+# gdf.to_file("communef_web.geojson", driver="GeoJSON")
+# print("Fichier généré : communef_web.geojson")
+
+
 from pathlib import Path
 import json
 import streamlit as st
@@ -150,7 +233,7 @@ st.set_page_config(page_title="Test GeoJSON Bénin", layout="wide")
 st.title("Test carte GeoJSON – Bénin")
 
 APP_DIR = Path(__file__).parent
-GEOJSON_PATH = APP_DIR / "communef.geojson"
+GEOJSON_PATH = APP_DIR / "communef_web.geojson"
 
 with open(GEOJSON_PATH, "r", encoding="utf-8") as f:
     gj = json.load(f)
@@ -171,17 +254,15 @@ layer = pdk.Layer(
     pickable=True,
 )
 
-view_state = pdk.ViewState(
-    latitude=9.3,
-    longitude=2.3,
-    zoom=6,
-    pitch=0
-)
-
 deck = pdk.Deck(
     layers=[layer],
-    initial_view_state=view_state,
-    map_style=None
+    initial_view_state=pdk.ViewState(
+        latitude=9.3,
+        longitude=2.3,
+        zoom=6,
+        pitch=0,
+    ),
+    map_style=None,
 )
 
 st.pydeck_chart(deck, width="stretch")
