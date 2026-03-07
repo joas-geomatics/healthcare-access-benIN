@@ -181,7 +181,7 @@ view_state = pdk.ViewState(
 deck = pdk.Deck(
     layers=[layer],
     initial_view_state=view_state,
-    map_style="light"
+    map_style=None
 )
 
 st.pydeck_chart(deck, width="stretch")
