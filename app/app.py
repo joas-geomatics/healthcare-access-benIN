@@ -223,14 +223,13 @@
 # gdf.to_file("communef_web.geojson", driver="GeoJSON")
 # print("Fichier généré : communef_web.geojson")
 
-
-from pathlib import Path
-import json
 import streamlit as st
+import json
 import pydeck as pdk
+from pathlib import Path
 
-st.set_page_config(page_title="Test GeoJSON Bénin", layout="wide")
-st.title("Test carte GeoJSON – Bénin")
+st.set_page_config(page_title="Accessibilité santé – Bénin", layout="wide")
+st.title("Accessibilité communale aux infrastructures de santé – Bénin")
 
 APP_DIR = Path(__file__).parent
 GEOJSON_PATH = APP_DIR / "communef_web.geojson"
@@ -238,31 +237,51 @@ GEOJSON_PATH = APP_DIR / "communef_web.geojson"
 with open(GEOJSON_PATH, "r", encoding="utf-8") as f:
     gj = json.load(f)
 
-st.caption(f"GeoJSON chargé : {len(gj.get('features', []))} communes")
+# couleurs par niveau
+colors = {
+    "Tres faible": [178, 34, 34, 160],
+    "Faible": [255, 140, 0, 160],
+    "Moyen": [255, 215, 0, 160],
+    "Bon acces": [0, 100, 0, 160],
+}
+
+# injecter couleur dans le GeoJSON
+for feat in gj["features"]:
+    niveau = feat["properties"].get("hopital_com_csv_niv_acces")
+    feat["properties"]["color"] = colors.get(niveau, [150,150,150,150])
 
 layer = pdk.Layer(
     "GeoJsonLayer",
     gj,
-    opacity=0.6,
+    opacity=0.7,
     stroked=True,
     filled=True,
-    extruded=False,
-    wireframe=False,
-    get_fill_color=[200, 30, 0, 120],
-    get_line_color=[0, 0, 0, 180],
+    get_fill_color="properties.color",
+    get_line_color=[0,0,0],
     line_width_min_pixels=1,
-    pickable=True,
+    pickable=True
 )
+
+tooltip = {
+    "html": """
+    <b>Commune :</b> {Com_norm}<br/>
+    <b>Niveau :</b> {hopital_com_csv_niv_acces}<br/>
+    <b>Population :</b> {hopital_com_csv_population}<br/>
+    <b>Infrastructures :</b> {hopital_com_csv_nb_infra}<br/>
+    <b>Indice :</b> {hopital_com_csv_idx_A_norm}
+    """,
+    "style": {"backgroundColor": "white", "color": "black"}
+}
 
 deck = pdk.Deck(
     layers=[layer],
     initial_view_state=pdk.ViewState(
         latitude=9.3,
         longitude=2.3,
-        zoom=6,
-        pitch=0,
+        zoom=6
     ),
-    map_style=None,
+    map_style="light",
+    tooltip=tooltip
 )
 
 st.pydeck_chart(deck, width="stretch")
